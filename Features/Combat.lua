@@ -11,39 +11,51 @@ local config = nil
 local remotes = {}
 local trackedAnimations = {}
 
--- Load timings
-local WeaponTimings = require(script.Parent.Parent.Timings.WeaponTimings)
-local MantraTimings = require(script.Parent.Parent.Timings.MantraTimings)
-local MobTimings = require(script.Parent.Parent.Timings.MobTimings)
-local EffectTimings = require(script.Parent.Parent.Timings.EffectTimings)
-local PartTimings = require(script.Parent.Parent.Timings.PartTimings)
-local SoundTimings = require(script.Parent.Parent.Timings.SoundTimings)
-
+-- All timings will be loaded from TimingManager at init
 local allTimings = {}
-for k, v in pairs(WeaponTimings) do allTimings[k] = v end
-for k, v in pairs(MantraTimings) do allTimings[k] = v end
-for k, v in pairs(MobTimings) do allTimings[k] = v end
-for k, v in pairs(EffectTimings) do allTimings[k] = v end
-for k, v in pairs(PartTimings) do allTimings[k] = v end
-for k, v in pairs(SoundTimings) do allTimings[k] = v end
 
 function Combat:init(parentModule)
-    config = parentModule and parentModule.config or {}
+    config = (parentModule and parentModule.config) or {}
     isRunning = true
     
-    local KeyHandling = require(script.Parent.Parent.Utils.KeyHandling)
-    KeyHandling.searchForKeyHandlerData()
+    -- Find remotes directly (no KeyHandling dependency)
+    self:cacheRemotes()
     
-    remotes.block = KeyHandling.getRemote("Block")
-    remotes.unblock = KeyHandling.getRemote("Unblock")
-    remotes.dodge = KeyHandling.getRemote("Dodge")
-    remotes.stopDodge = KeyHandling.getRemote("StopDodge")
-    remotes.leftClick = KeyHandling.getRemote("LeftClick")
-    remotes.criticalClick = KeyHandling.getRemote("CriticalClick")
-    remotes.feintClick = KeyHandling.getRemote("FeintClick")
-    remotes.activateMantra = KeyHandling.getRemote("ActivateMantra")
+    -- Get timings from global if available
+    if getgenv().ObliteratedTimings then
+        allTimings = getgenv().ObliteratedTimings
+    else
+        allTimings = {}
+    end
     
-    print("✓ Combat initialized with " .. Table.size(allTimings) .. " timings")
+    print("Combat initialized with " .. #(allTimings and {} or {}) .. " timings")
+end
+
+function Combat:cacheRemotes()
+    local keybinds = ReplicatedStorage:FindFirstChild("KeyBinds")
+    if not keybinds then
+        warn("KeyBinds folder not found")
+        return
+    end
+    
+    remotes = {}
+    
+    for _, child in ipairs(keybinds:GetChildren()) do
+        if child:IsA("RemoteEvent") then
+            local name = child.Name
+            if name:match("Block") then remotes.block = child
+            elseif name:match("Unblock") then remotes.unblock = child
+            elseif name:match("Dodge") or name:match("Roll") then remotes.dodge = child
+            elseif name:match("StopDodge") or name:match("StopRoll") then remotes.stopDodge = child
+            elseif name:match("LeftClick") or name:match("M1") then remotes.leftClick = child
+            elseif name:match("CriticalClick") or name:match("Crit") then remotes.criticalClick = child
+            elseif name:match("Feint") then remotes.feintClick = child
+            elseif name:match("ActivateMantra") then remotes.activateMantra = child
+            end
+        end
+    end
+    
+    print("Cached remotes: Block=" .. tostring(remotes.block ~= nil) .. " Dodge=" .. tostring(remotes.dodge ~= nil))
 end
 
 function Combat:getTiming(id)
@@ -52,20 +64,24 @@ end
 
 function Combat:executeParry()
     if remotes.block then
-        remotes.block:FireServer()
+        pcall(function() remotes.block:FireServer() end)
         task.spawn(function()
             task.wait(0.06)
-            if remotes.unblock then remotes.unblock:FireServer() end
+            if remotes.unblock then
+                pcall(function() remotes.unblock:FireServer() end)
+            end
         end)
     end
 end
 
 function Combat:executeDodge()
     if remotes.dodge then
-        remotes.dodge:FireServer("roll", nil, nil, false)
+        pcall(function() remotes.dodge:FireServer("roll", nil, nil, false) end)
         task.spawn(function()
             task.wait(0.15)
-            if remotes.stopDodge then remotes.stopDodge:FireServer() end
+            if remotes.stopDodge then
+                pcall(function() remotes.stopDodge:FireServer() end)
+            end
         end)
     end
 end
@@ -79,8 +95,9 @@ function Combat:trackAnimation(track, entity)
     
     for _, action in ipairs(timing.actions or {}) do
         task.spawn(function()
-            task.wait(action._when / 1000)
-            if not track.IsPlaying then
+            task.wait((action._when or 500) / 1000)
+            
+            if not track or not track.IsPlaying then
                 trackedAnimations[id] = nil
                 return
             end
@@ -90,7 +107,7 @@ function Combat:trackAnimation(track, entity)
             local root = char:FindFirstChild("HumanoidRootPart")
             if not root then return end
             
-            local targetRoot = entity:FindFirstChild("HumanoidRootPart")
+            local targetRoot = entity and entity:FindFirstChild("HumanoidRootPart")
             if not targetRoot then return end
             
             local dist = (root.Position - targetRoot.Position).Magnitude
@@ -101,15 +118,15 @@ function Combat:trackAnimation(track, entity)
             elseif action._type == "Dodge" or action._type == "Forced Full Dodge" then
                 self:executeDodge()
             elseif action._type == "Start Block" and remotes.block then
-                remotes.block:FireServer()
+                pcall(function() remotes.block:FireServer() end)
             elseif action._type == "End Block" and remotes.unblock then
-                remotes.unblock:FireServer()
+                pcall(function() remotes.unblock:FireServer() end)
             end
         end)
     end
     
     task.spawn(function()
-        while track.IsPlaying do task.wait() end
+        while track and track.IsPlaying do task.wait() end
         trackedAnimations[id] = nil
     end)
 end
@@ -123,7 +140,7 @@ function Combat:scanForAnimations()
     
     for _, entity in ipairs(live:GetChildren()) do
         if entity == character then continue end
-        
+        https://github.com/imevil1575-cmd/Obliterated/blob/main/Features/Combat.lua
         local humanoid = entity:FindFirstChild("Humanoid")
         if not humanoid or humanoid.Health <= 0 then continue end
         
