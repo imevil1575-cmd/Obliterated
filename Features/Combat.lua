@@ -11,24 +11,21 @@ local config = nil
 local remotes = {}
 local trackedAnimations = {}
 
--- All timings will be loaded from TimingManager at init
 local allTimings = {}
 
 function Combat:init(parentModule)
     config = (parentModule and parentModule.config) or {}
     isRunning = true
     
-    -- Find remotes directly (no KeyHandling dependency)
     self:cacheRemotes()
     
-    -- Get timings from global if available
     if getgenv().ObliteratedTimings then
         allTimings = getgenv().ObliteratedTimings
     else
         allTimings = {}
     end
     
-    print("Combat initialized with " .. #(allTimings and {} or {}) .. " timings")
+    print("Combat initialized")
 end
 
 function Combat:cacheRemotes()
@@ -140,7 +137,7 @@ function Combat:scanForAnimations()
     
     for _, entity in ipairs(live:GetChildren()) do
         if entity == character then continue end
-        https://github.com/imevil1575-cmd/Obliterated/blob/main/Features/Combat.lua
+        
         local humanoid = entity:FindFirstChild("Humanoid")
         if not humanoid or humanoid.Health <= 0 then continue end
         
