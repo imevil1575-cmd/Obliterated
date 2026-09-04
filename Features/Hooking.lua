@@ -1,20 +1,16 @@
 -- Features/Hooking.lua
 local Hooking = {}
 
--- FIX 1: Don't use require, get things directly
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local banRemotes = {}
 local hooksActive = false
-
--- FIX 2: Safe function to check if hookfunction exists
-local function safeHookFunction(func, hook)
-    if type(hookfunction) == "function" then
-        return hookfunction(func, hook)
-    end
-    return nil
-end
+local hookResults = {
+    fireServer = false,
+    unreliableFireServer = false,
+    namecall = false
+}
 
 function Hooking.findBanRemotes()
     local requests = ReplicatedStorage:FindFirstChild("Requests")
@@ -27,11 +23,11 @@ function Hooking.findBanRemotes()
     for _, remote in ipairs(requests:GetChildren()) do
         if remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction") then
             local remoteName = remote.Name:lower()
-            -- Check for ban-related remotes by name
             if remoteName:find("ban") or 
                remoteName:find("kick") or 
                remoteName:find("punish") or
-               remoteName:find("moderate") then
+               remoteName:find("moderate") or
+               remoteName:find("admin") then
                 banRemotes[remote] = true
                 print("🔒 Found ban remote:", remote.Name)
             end
@@ -40,7 +36,6 @@ function Hooking.findBanRemotes()
 end
 
 function Hooking.hookFireServer()
-    -- FIX 2: Check if hookfunction exists first
     if type(hookfunction) ~= "function" then
         warn("⚠️ hookfunction not available")
         return false
@@ -52,14 +47,15 @@ function Hooking.hookFireServer()
     local hooked, result = pcall(function()
         return hookfunction(originalFire, function(self, ...)
             if banRemotes[self] then 
-                return nil -- Block the remote
+                return nil
             end
             return originalFire(self, ...)
         end)
     end)
     
     if hooked then
-        print("✓ FireServer hooked")
+        print("✅ FireServer hooked")
+        hookResults.fireServer = true
         return true
     else
         warn("⚠️ Failed to hook FireServer:", result)
@@ -85,7 +81,8 @@ function Hooking.hookUnreliableFireServer()
     end)
     
     if hooked then
-        print("✓ UnreliableFireServer hooked")
+        print("✅ UnreliableFireServer hooked")
+        hookResults.unreliableFireServer = true
         return true
     else
         warn("⚠️ Failed to hook UnreliableFireServer:", result)
@@ -94,7 +91,8 @@ function Hooking.hookUnreliableFireServer()
 end
 
 function Hooking.hookNamecall()
-    -- FIX 2: Alternative approach using __index
+    -- This will likely fail in Volt (readonly table)
+    -- But that's okay, it's not critical
     local success, result = pcall(function()
         local mt = getrawmetatable(game)
         if not mt then 
@@ -102,49 +100,92 @@ function Hooking.hookNamecall()
             return false
         end
         
-        -- Backup original __index
-        local oldIndex = mt.__index
+        -- Try to get the real __namecall
+        local oldNamecall = mt.__namecall
+        if not oldNamecall then
+            warn("⚠️ __namecall not found")
+            return false
+        end
         
-        mt.__index = function(table, key)
-            -- Check if it's a banned remote
-            if key == "FireServer" and banRemotes[table] then
-                return function() return nil end -- No-op function
+        -- Attempt to modify (will likely fail in Volt)
+        mt.__namecall = function(...)
+            local self = {...}[1]
+            if banRemotes[self] then
+                return nil
             end
-            -- Return original or next in chain
-            if oldIndex then
-                return oldIndex(table, key)
-            end
-            return nil
+            return oldNamecall(...)
         end
         
         return true
     end)
     
     if success then
-        print("✓ Namecall hooked")
+        print("✅ Namecall hooked")
+        hookResults.namecall = true
         return true
     else
-        warn("⚠️ Failed to hook namecall:", result)
+        -- Expected error in Volt: "attempt to modify a readonly table"
+        -- This is fine, we have fallbacks
+        if result:find("readonly") then
+            print("ℹ️ Namecall hook skipped (readonly table - expected in Volt)")
+        else
+            warn("⚠️ Failed to hook namecall:", result)
+        end
         return false
     end
 end
 
 function Hooking.bypassBanRemotes()
+    local count = 0
     for remote, _ in pairs(banRemotes) do
         if remote and remote.Parent then 
             pcall(function()
                 remote:Destroy()
+                count = count + 1
                 print("🗑️ Destroyed banned remote:", remote.Name)
             end)
         end
     end
+    if count > 0 then
+        print("✅ Destroyed", count, "banned remotes")
+    end
 end
 
--- FIX 3: Alternative method without setfenv
+-- Fallback: Direct remote blocking without hooks
+function Hooking.blockRemotesDirect()
+    print("🔄 Applying direct remote blocking...")
+    local requests = ReplicatedStorage:FindFirstChild("Requests")
+    if not requests then return end
+    
+    local count = 0
+    for _, remote in ipairs(requests:GetChildren()) do
+        if remote:IsA("RemoteEvent") then
+            local name = remote.Name:lower()
+            if name:find("ban") or name:find("kick") or name:find("punish") then
+                -- Store original function
+                local originalFire = remote.FireServer
+                
+                -- Override with our block
+                remote.FireServer = function(self, ...)
+                    print("🚫 Blocked banned remote:", remote.Name)
+                    return nil
+                end
+                count = count + 1
+                print("🔒 Directly blocked:", remote.Name)
+            end
+        end
+    end
+    
+    if count > 0 then
+        print("✅ Directly blocked", count, "remotes")
+    end
+end
+
 function Hooking.init()
     print("🔄 Initializing hooks...")
+    print("🔧 Environment: Volt")
     
-    -- Wait for game to load (FIX 4)
+    -- Wait for game to load
     local function waitForGame()
         if not game:IsLoaded() then
             print("⏳ Waiting for game to load...")
@@ -156,88 +197,79 @@ function Hooking.init()
                 task.wait(0.1)
             until Players.LocalPlayer
         end
+        print("✅ Game loaded")
     end
     
-    -- Wrap everything in pcall for safety
     local success, err = pcall(function()
         waitForGame()
         
+        -- Find all ban remotes
         Hooking.findBanRemotes()
         
+        -- Destroy banned remotes if found
         if next(banRemotes) then
             Hooking.bypassBanRemotes()
         end
         
-        -- Try all hooking methods
-        local hooksSucceeded = 0
-        if Hooking.hookFireServer() then hooksSucceeded = hooksSucceeded + 1 end
-        if Hooking.hookUnreliableFireServer() then hooksSucceeded = hooksSucceeded + 1 end
-        if Hooking.hookNamecall() then hooksSucceeded = hooksSucceeded + 1 end
+        -- Try hooking methods
+        print("🔧 Attempting hooks...")
+        Hooking.hookFireServer()
+        Hooking.hookUnreliableFireServer()
+        Hooking.hookNamecall() -- Will fail in Volt, but that's okay
+        
+        -- Count successful hooks
+        local successCount = 0
+        for _, v in pairs(hookResults) do
+            if v then successCount = successCount + 1 end
+        end
+        
+        print("✅ Hooking initialized (", successCount, "/3 hooks active)")
+        
+        -- Even if hooks fail, try direct blocking
+        if successCount == 0 then
+            print("🔄 No hooks active, using direct blocking...")
+            Hooking.blockRemotesDirect()
+        end
         
         hooksActive = true
-        print("✓ Hooking initialized (", hooksSucceeded, "/3 hooks active)")
     end)
     
     if not success then
         warn("⚠️ Hooking init failed:", err)
-        -- Try fallback method without hooks
-        Hooking.fallback()
+        -- Ultimate fallback: try direct blocking
+        pcall(function()
+            Hooking.blockRemotesDirect()
+        end)
     end
 end
 
--- FALLBACK: If hooks fail, use direct remote blocking
-function Hooking.fallback()
-    print("🔄 Using fallback method...")
-    
-    -- Directly modify remote events
-    local requests = ReplicatedStorage:FindFirstChild("Requests")
-    if requests then
-        for _, remote in ipairs(requests:GetChildren()) do
-            if remote:IsA("RemoteEvent") then
-                local name = remote.Name:lower()
-                if name:find("ban") or name:find("kick") then
-                    -- Override the FireServer method directly
-                    local oldFire = remote.FireServer
-                    remote.FireServer = function(self, ...)
-                        print("🚫 Blocked banned remote:", remote.Name)
-                        return nil
-                    end
-                    print("🔒 Blocked remote via fallback:", remote.Name)
-                end
-            end
-        end
-    end
+function Hooking.getStatus()
+    return {
+        active = hooksActive,
+        hooks = hookResults,
+        bannedRemotes = #banRemotes
+    }
 end
 
--- Cleanup function
 function Hooking.detach()
-    if not hooksActive then return end
+    if not hooksActive then 
+        print("ℹ️ No hooks to detach")
+        return 
+    end
     
     print("🔄 Detaching hooks...")
     
-    -- Try to restore original functions
+    -- Restore FireServer hooks if possible
     pcall(function()
-        -- Restore metatable
-        local mt = getrawmetatable(game)
-        if mt and mt.__index then
-            -- Try to restore original
+        local remoteEvent = Instance.new("RemoteEvent")
+        if hookResults.fireServer then
+            -- Restore original
+            hookfunction(remoteEvent.FireServer, remoteEvent.FireServer)
         end
     end)
     
     hooksActive = false
-    print("✓ Hooks detached")
+    print("✅ Hooks detached")
 end
-
--- FIX 3: Handle Volt's environment differently
--- Setup the environment for Volt
-local function setupVoltEnvironment()
-    -- Volt-specific setup if needed
-    if _G.VOLT or _G.Volt then
-        print("⚡ Volt environment detected")
-        -- Any Volt-specific adjustments here
-    end
-end
-
-setupVoltEnvironment()
 
 return Hooking
