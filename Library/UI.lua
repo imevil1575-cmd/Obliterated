@@ -1,5 +1,5 @@
--- Library/UI.lua - Complete menu system with Black & Pink Goku Black theme
--- Features: Goku Black branding, black/pink color scheme, full menu system
+-- Library/UI.lua - Complete menu system with Goku Black theme
+-- Features: PR Nextgen layout with Goku Black style
 
 local UI = {}
 UI.__index = UI
@@ -13,7 +13,7 @@ local isOpen = false
 local elements = {}
 local tabs = {}
 
--- Goku Black Theme Colors
+-- Goku Black Theme Colors (Preserved)
 local theme = {
     background = Color3.fromRGB(8, 8, 8),        -- Pure black
     main = Color3.fromRGB(15, 15, 15),           -- Slightly lighter black
@@ -33,13 +33,13 @@ screenGui.Name = "ObliteratedUI"
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 screenGui.Parent = game:GetService("CoreGui")
 
--- Goku Black Background Image (anime style)
+-- Goku Black Background Image
 local backgroundImage = Instance.new("ImageLabel")
 backgroundImage.Name = "BackgroundImage"
 backgroundImage.Size = UDim2.new(1, 0, 1, 0)
 backgroundImage.Position = UDim2.new(0, 0, 0, 0)
 backgroundImage.BackgroundTransparency = 1
-backgroundImage.Image = "rbxassetid://15468933003" -- Goku Black image
+backgroundImage.Image = "rbxassetid://15468933003"
 backgroundImage.ImageTransparency = 0.88
 backgroundImage.ScaleType = Enum.ScaleType.Crop
 backgroundImage.Parent = screenGui
@@ -49,8 +49,8 @@ local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 mainFrame.BorderSizePixel = 0
-mainFrame.Position = UDim2.new(0.5, -325, 0.5, -325)
-mainFrame.Size = UDim2.new(0, 650, 0, 650)
+mainFrame.Position = UDim2.new(0.5, -375, 0.5, -375)
+mainFrame.Size = UDim2.new(0, 750, 0, 750)
 mainFrame.Visible = false
 mainFrame.Parent = screenGui
 
@@ -74,7 +74,7 @@ innerFrame.Position = UDim2.new(0.005, 0, 0.005, 0)
 innerFrame.Size = UDim2.new(0.99, 0, 0.99, 0)
 innerFrame.Parent = mainFrame
 
--- Top accent bar (pink glow)
+-- Top accent bar
 local accentBar = Instance.new("Frame")
 accentBar.Name = "AccentBar"
 accentBar.BackgroundColor3 = theme.accent
@@ -90,7 +90,6 @@ titleFrame.BorderSizePixel = 0
 titleFrame.Size = UDim2.new(1, 0, 0, 38)
 titleFrame.Parent = innerFrame
 
--- Title background glow
 local titleGlow = Instance.new("Frame")
 titleGlow.Name = "TitleGlow"
 titleGlow.BackgroundColor3 = theme.accent
@@ -99,24 +98,22 @@ titleGlow.BorderSizePixel = 0
 titleGlow.Size = UDim2.new(1, 0, 1, 0)
 titleGlow.Parent = titleFrame
 
--- Goku Black Logo/Title
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "TitleLabel"
 titleLabel.BackgroundTransparency = 1
 titleLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json")
-titleLabel.Text = "☯ OBLITERATED ☯"
+titleLabel.Text = "⚔ OBLITERATED ⚔"
 titleLabel.TextColor3 = theme.accent
 titleLabel.TextSize = 24
 titleLabel.TextXAlignment = Enum.TextXAlignment.Center
 titleLabel.Size = UDim2.new(1, 0, 1, 0)
 titleLabel.Parent = titleFrame
 
--- Subtitle
 local subtitleLabel = Instance.new("TextLabel")
 subtitleLabel.Name = "SubtitleLabel"
 subtitleLabel.BackgroundTransparency = 1
 subtitleLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json")
-subtitleLabel.Text = "✦ Goku Black Edition ✦"
+subtitleLabel.Text = "✦ PR Nextgen ✦ Goku Black Edition ✦"
 subtitleLabel.TextColor3 = theme.fontDim
 subtitleLabel.TextSize = 12
 subtitleLabel.TextXAlignment = Enum.TextXAlignment.Right
@@ -155,17 +152,7 @@ contentArea.Position = UDim2.new(0, 0, 0, 34)
 contentArea.Size = UDim2.new(1, 0, 1, -34)
 contentArea.Parent = tabContainer
 
-local contentList = Instance.new("UIListLayout")
-contentList.FillDirection = Enum.FillDirection.Horizontal
-contentList.Padding = UDim.new(0, 6)
-contentList.SortOrder = Enum.SortOrder.LayoutOrder
-contentList.Parent = contentArea
-
 -- ===== UI Helper Functions =====
-
-function UI:applyTheme(name)
-    -- Theme is already applied (black & pink)
-end
 
 function UI:createTab(name)
     local btn = Instance.new("TextButton")
@@ -176,10 +163,9 @@ function UI:createTab(name)
     btn.Text = " " .. name .. " "
     btn.TextColor3 = theme.font
     btn.TextSize = 13
-    btn.Size = UDim2.new(0, 85, 1, 0)
+    btn.Size = UDim2.new(0, 95, 1, 0)
     btn.Parent = tabArea
     
-    -- Pink accent on hover
     btn.MouseEnter:Connect(function()
         btn.TextColor3 = theme.accent
     end)
@@ -220,7 +206,6 @@ function UI:createTab(name)
         groupInner.Position = UDim2.new(0, 1, 0, 1)
         groupInner.Parent = groupFrame
         
-        -- Group header with pink accent
         local groupHeader = Instance.new("Frame")
         groupHeader.BackgroundColor3 = theme.accent
         groupHeader.BorderSizePixel = 0
@@ -335,9 +320,9 @@ function UI:createTab(name)
         content = content,
         layout = contentLayout,
         addGroupbox = addGroupbox,
-        addLeftGroupbox = function(title) return addGroupbox(title) end,
-        addRightGroupbox = function(title) return addGroupbox(title) end,
-        addDynamicGroupbox = function(title) return addGroupbox(title) end,
+        addLeftGroupbox = addGroupbox,
+        addRightGroupbox = addGroupbox,
+        addDynamicGroupbox = addGroupbox,
         addTabbox = function(info)
             return {
                 addTab = function(name)
@@ -366,7 +351,7 @@ function UI:createTab(name)
     return tab
 end
 
--- Create a toggle with pink theme
+-- CREATE TOGGLE
 function UI:createToggle(text, parent, callback)
     local frame = Instance.new("Frame")
     frame.BackgroundTransparency = 1
@@ -436,7 +421,7 @@ function UI:createToggle(text, parent, callback)
     }
 end
 
--- Create a slider with pink theme
+-- CREATE SLIDER
 function UI:createSlider(text, parent, min, max, default, suffix, callback)
     local frame = Instance.new("Frame")
     frame.BackgroundTransparency = 1
@@ -503,7 +488,7 @@ function UI:createSlider(text, parent, min, max, default, suffix, callback)
     }
 end
 
--- Create a dropdown with pink theme
+-- CREATE DROPDOWN
 function UI:createDropdown(text, parent, options, default, callback)
     local frame = Instance.new("Frame")
     frame.BackgroundTransparency = 1
@@ -545,7 +530,6 @@ function UI:createDropdown(text, parent, options, default, callback)
     selectedLabel.Size = UDim2.new(1, -5, 1, 0)
     selectedLabel.Parent = dropdownInner
     
-    -- Dropdown arrow
     local arrow = Instance.new("TextLabel")
     arrow.BackgroundTransparency = 1
     arrow.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json")
@@ -642,7 +626,7 @@ function UI:createDropdown(text, parent, options, default, callback)
     }
 end
 
--- Create a button with pink theme
+-- CREATE BUTTON
 function UI:createButton(text, parent, callback)
     local btn = Instance.new("TextButton")
     btn.BackgroundColor3 = theme.main
@@ -671,7 +655,7 @@ function UI:createButton(text, parent, callback)
     return btn
 end
 
--- Create a color picker
+-- CREATE COLOR PICKER
 function UI:createColorPicker(text, parent, defaultColor, callback)
     local frame = Instance.new("Frame")
     frame.BackgroundTransparency = 1
@@ -700,8 +684,6 @@ function UI:createColorPicker(text, parent, defaultColor, callback)
     
     colorFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            -- Simple color picker - cycles through presets
-            -- Full implementation would have HSV picker
             local colors = {
                 Color3.fromRGB(255, 20, 147),  -- Hot pink
                 Color3.fromRGB(255, 255, 255), -- White
@@ -733,7 +715,7 @@ function UI:createColorPicker(text, parent, defaultColor, callback)
     }
 end
 
--- Create a label
+-- CREATE LABEL
 function UI:createLabel(text, parent)
     local label = Instance.new("TextLabel")
     label.BackgroundTransparency = 1
@@ -747,7 +729,7 @@ function UI:createLabel(text, parent)
     return label
 end
 
--- Create a divider
+-- CREATE DIVIDER
 function UI:createDivider(parent)
     local frame = Instance.new("Frame")
     frame.BackgroundColor3 = theme.outline
@@ -756,7 +738,156 @@ function UI:createDivider(parent)
     frame.Parent = parent
 end
 
--- ===== Public API =====
+-- ===== BUILD UI WITH ALL FEATURES =====
+
+function UI:BuildUI()
+    -- Main Tab
+    local mainTab = UI:createTab("Main")
+    local mainGroup = mainTab:addGroupbox("Main")
+    mainGroup:addToggle("Auto Sprint", false)
+    mainGroup:addToggle("Auto Wisp", false)
+    mainGroup:addToggle("Auto Fish", false)
+    mainGroup:addBlank(5)
+    mainGroup:addLabel("━ Auto Root ━")
+    mainGroup:addToggle("Auto Loot", false)
+    mainGroup:addToggle("Notify On Loot", false)
+    mainGroup:addBlank(5)
+    mainGroup:addLabel("━ Always Loot Items ━")
+    mainGroup:addToggle("Relics", false)
+    mainGroup:addToggle("Kyrsan Medallions", false)
+    mainGroup:addBlank(5)
+    mainGroup:addLabel("━ Notes ━")
+    mainGroup:addToggle("Ministry Note Farm", false)
+    mainGroup:addBlank(5)
+    mainGroup:addLabel("━ Astral ━")
+    mainGroup:addToggle("Moons Eyrie Farm", false)
+    mainGroup:addBlank(5)
+    mainGroup:addLabel("━ Bosses ━")
+    mainGroup:addToggle("Auto Layer 2", false)
+    mainGroup:addToggle("Auto Duke", false)
+    mainGroup:addToggle("Auto Ferryman", false)
+    mainGroup:addBlank(5)
+    mainGroup:addLabel("━ Utility ━")
+    mainGroup:addToggle("Escape Depths [WIP]", false)
+    
+    -- Visuals Tab
+    local visualsTab = UI:createTab("Visuals")
+    local visualsGroup = visualsTab:addGroupbox("Visuals")
+    visualsGroup:addLabel("━ Player ESP ━")
+    visualsGroup:addToggle("Player ESP", false)
+    visualsGroup:addToggle("Guildmate Color", false)
+    visualsGroup:addToggle("Player Healthbars", false)
+    visualsGroup:addToggle("Player Names", false)
+    visualsGroup:addToggle("Sanity Indicator", false)
+    visualsGroup:addBlank(5)
+    visualsGroup:addLabel("━ Dropped Items ━")
+    visualsGroup:addToggle("Dropped Item ESP", false)
+    visualsGroup:addToggle("Owl Feather ESP", false)
+    visualsGroup:addToggle("Ingredient ESP", false)
+    visualsGroup:addToggle("Artifact ESP", false)
+    visualsGroup:addBlank(5)
+    visualsGroup:addLabel("━ Other ━")
+    visualsGroup:addToggle("Full Bright", false)
+    visualsGroup:addToggle("Noclip Camera", false)
+    visualsGroup:addToggle("Freecam", false)
+    visualsGroup:addToggle("Streamer Mode", false)
+    
+    -- Combat Tab
+    local combatTab = UI:createTab("Combat")
+    local combatGroup = combatTab:addGroupbox("Combat")
+    combatGroup:addLabel("━ Session ━")
+    combatGroup:addDropdown("Currently set to:", {"persistent", "aggressive", "defensive"}, "persistent")
+    combatGroup:addBlank(5)
+    combatGroup:addLabel("━ Missions ━")
+    combatGroup:addToggle("Auto Authority Missions", false)
+    combatGroup:addBlank(5)
+    combatGroup:addLabel("━ Saramed ━")
+    combatGroup:addToggle("Auto Saramed", false)
+    combatGroup:addBlank(5)
+    combatGroup:addLabel("━ Auto Progression ━")
+    combatGroup:addLabel("Build URL: [empty]")
+    combatGroup:addBlank(5)
+    combatGroup:addLabel("━ Builder ━")
+    combatGroup:addToggle("Auto Progress", false)
+    combatGroup:addBlank(5)
+    combatGroup:addLabel("━ Resources ━")
+    combatGroup:addToggle("Titus Relic Farm", false)
+    combatGroup:addBlank(5)
+    combatGroup:addLabel("━ Echoes ━")
+    combatGroup:addToggle("Titus Echo Farm", false)
+    combatGroup:addToggle("Soup Echo Farm", false)
+    
+    -- Automation Tab
+    local autoTab = UI:createTab("Automation")
+    local autoGroup = autoTab:addGroupbox("Automation")
+    autoGroup:addLabel("━ Auto Parry ━")
+    autoGroup:addSlider("Dont Process Players Over:", 500, 5000, 1000)
+    autoGroup:addSlider("Dont Process Mobs Over:", 1000, 5000, 2000)
+    autoGroup:addSlider("Task Concurrency:", 5, 50, 20)
+    autoGroup:addToggle("Anti AP Breaker", false)
+    autoGroup:addToggle("Debug Notifications", false)
+    autoGroup:addToggle("Humanization", false)
+    autoGroup:addToggle("Auto Feint", false)
+    autoGroup:addBlank(5)
+    autoGroup:addLabel("━ Anim Speed Changer ━")
+    autoGroup:addSlider("Switch Speed", 1, 20, 5)
+    autoGroup:addToggle("M1s", false)
+    autoGroup:addBlank(5)
+    autoGroup:addLabel("━ Silent Aim ━")
+    autoGroup:addToggle("Silent Aim", false)
+    autoGroup:addToggle("Safe Input", false)
+    autoGroup:addToggle("Force Chime (solo)", false)
+    autoGroup:addToggle("Show FOV", false)
+    autoGroup:addSlider("FOV", 100, 5000, 2000)
+    autoGroup:addBlank(5)
+    autoGroup:addLabel("━ Mantra ━")
+    autoGroup:addToggle("Mantra Rolling", false)
+    autoGroup:addToggle("Mantra Slidecast", false)
+    autoGroup:addToggle("Backstab Movestacker", false)
+    
+    -- UI Tab
+    local uiTab = UI:createTab("UI")
+    local uiGroup = uiTab:addGroupbox("UI")
+    uiGroup:addLabel("━ General ━")
+    uiGroup:addToggle("AutoDecline Squad Invites", false)
+    uiGroup:addToggle("AutoDecline Guild Invites", false)
+    uiGroup:addToggle("Allow Solar Enchant", false)
+    uiGroup:addToggle("Use Attunements", false)
+    uiGroup:addBlank(5)
+    uiGroup:addLabel("━ Options ━")
+    uiGroup:addToggle("AutoFight Mobs [WIP]", false)
+    uiGroup:addToggle("Wipe Current", false)
+    uiGroup:addToggle("Auto Chime Requeue", false)
+    uiGroup:addBlank(5)
+    uiGroup:addLabel("━ Create/Load ━")
+    uiGroup:addButton("Create Config", function() print("Config Created!") end)
+    uiGroup:addButton("Load Config", function() print("Config Loaded!") end)
+    uiGroup:addBlank(5)
+    uiGroup:addLabel("━ Session ━")
+    uiGroup:addDropdown("Type", {"Default", "Farm", "Boss"}, "Default")
+    uiGroup:addBlank(5)
+    uiGroup:addLabel("━ Misc ━")
+    uiGroup:addToggle("Auto Charisma Book", false)
+    uiGroup:addToggle("Auto Math Textbook", false)
+    uiGroup:addToggle("Auto Ragdoll Cancel", false)
+    uiGroup:addToggle("Auto Golden Tongue", false)
+    uiGroup:addToggle("Auto Train Agility", false)
+    uiGroup:addToggle("Auto Air Counter", false)
+    uiGroup:addToggle("Auto Roll Cancel", false)
+    uiGroup:addToggle("Auto Flow State", false)
+    uiGroup:addToggle("Auto Uppercut", false)
+    uiGroup:addToggle("Auto Reinforce", false)
+    uiGroup:addToggle("Auto Ardour", false)
+    uiGroup:addToggle("Auto Brutus", false)
+    uiGroup:addBlank(5)
+    uiGroup:addLabel("━ Auto Progress ━")
+    uiGroup:addToggle("Auto Builder", false)
+    uiGroup:addToggle("Auto Points", false)
+    
+    UI:init()
+end
+
+-- ===== PUBLIC API =====
 
 function UI:init()
     if #tabs > 0 then
@@ -768,16 +899,12 @@ function UI:toggle()
     isOpen = not isOpen
     mainFrame.Visible = isOpen
     if isOpen then
-        mainFrame:TweenSize(UDim2.new(0, 650, 0, 650), "Out", "Quad", 0.2, true)
+        mainFrame:TweenSize(UDim2.new(0, 750, 0, 750), "Out", "Quad", 0.2, true)
     end
 end
 
 function UI:destroy()
     screenGui:Destroy()
-end
-
-function UI:setWatermark(text)
-    -- Watermark handled separately
 end
 
 function UI:notify(text, duration)
@@ -791,12 +918,15 @@ function UI:createWindow(config)
     }
 end
 
-function UI:AddMissEntry(type, key, name, distance, parent)
-    -- Miss entry logging
-end
+-- ===== KEYBIND =====
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        UI:toggle()
+    end
+end)
 
-function UI:Notify(text, time)
-    print("[Obliterated] " .. text)
-end
+-- Build the UI
+UI:BuildUI()
 
 return UI
