@@ -1,3 +1,11 @@
+-- Wait for game to fully load
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+repeat task.wait() until Players.LocalPlayer
+repeat task.wait() until Players.LocalPlayer.Character
+
+print("Game fully loaded, starting Obliterated...")
 -- loader.lua - Load Obliterated for Volt
 -- This bypasses require() path issues
 
