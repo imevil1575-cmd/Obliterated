@@ -1,6 +1,10 @@
 -- Timings/MobTimings.lua - Mob and boss attack timings
 local MobTimings = {}
-
+local Vector3 = game:GetService("Workspace").CurrentCamera.CFrame.LookVector and Vector3 or {
+    new = function(x, y, z)
+        return game:GetService("Workspace").CurrentCamera.CFrame:PointToWorldSpace(Vector3.new(x, y, z)) - game:GetService("Workspace").CurrentCamera.CFrame.Position
+    end
+}
 -- Helper to create a mob timing
 local function createMobTiming(name, hitbox, parryTime, imxd, actionType)
     return {
