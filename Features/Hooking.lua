@@ -339,23 +339,7 @@ function Hooking.detach()
     print("✅ Hooks detached")
 end
 
--- AUTO-INIT WITH ERROR HANDLING
-local function autoInit()
-    local success, err = pcall(function()
-        Hooking.init()
-    end)
-    
-    if not success then
-        warn("❌ Auto-init failed:", err)
-        -- Try fallback direct blocking
-        pcall(function()
-            print("🔄 Trying fallback...")
-            Hooking.blockRemotesDirect()
-        end)
-    end
-end
-
--- Run auto-init
-autoInit()
+-- ⚠️ REMOVED AUTO-INIT - You must call Hooking.init() manually
+-- The autoInit() function has been removed to prevent premature execution
 
 return Hooking
