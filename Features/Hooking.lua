@@ -1,22 +1,7 @@
 -- Features/Hooking.lua
 local Hooking = {}
-
--- SAFE SERVICE GETTER
-local function getService(serviceName)
-    local success, service = pcall(function()
-        return game:GetService(serviceName)
-    end)
-    if success and service then
-        return service
-    end
-    warn("⚠️ Failed to get service: " .. serviceName)
-    return nil
-end
-
--- Get services safely
-local Players = getService("Players")
-local ReplicatedStorage = getService("ReplicatedStorage")
-
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- State variables
 local banRemotes = {}
 local hooksActive = false
