@@ -6,7 +6,7 @@ SoundTimings["GenericTelegraphSound"] = {
     _id = "rbxassetid://GenericTelegraphSound",
     name = "Generic Telegraph",
     tag = "Undefined",
-    hitbox = Vector3.new(25, 25, 25),
+    hitbox = {25, 25, 25},
     imdd = 0,
     imxd = 50,
     duih = false,
@@ -27,7 +27,7 @@ SoundTimings["GenericTelegraphSound"] = {
             _type = "Parry",
             _when = 0,
             name = "Generic Telegraph Parry",
-            hitbox = Vector3.new(25, 25, 25),
+            hitbox = {25, 25, 25},
             ihbc = false,
         }
     }
@@ -38,7 +38,7 @@ SoundTimings["TitusTelegraph"] = {
     _id = "rbxassetid://TitusTelegraph",
     name = "Titus Telegraph",
     tag = "Undefined",
-    hitbox = Vector3.new(30, 30, 30),
+    hitbox = {30, 30, 30},
     imdd = 0,
     imxd = 40,
     duih = false,
@@ -50,4 +50,18 @@ SoundTimings["TitusTelegraph"] = {
     bfht = 0.3,
     pfh = false,
     phd = false,
-   
+    phds = 0,
+    pfht = 0.15,
+    dp = false,
+    actions = {
+        {
+            _type = "Parry",
+            _when = 0,
+            name = "Titus Telegraph Parry",
+            hitbox = {30, 30, 30},
+            ihbc = false,
+        }
+    }
+}
+
+return SoundTimings
